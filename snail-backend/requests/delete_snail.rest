@@ -1,0 +1,1 @@
+DELETE http://localhost:3008/api/snails/68349f2d5c680ed9d715f95c

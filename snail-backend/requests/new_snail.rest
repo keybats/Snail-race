@@ -1,0 +1,9 @@
+POST http://localhost:3008/api/snails
+Content-Type: application/json
+
+{
+  "name": "TestWinner",
+  "speed": 25,
+  "concentration": 13,
+  "character": "W"
+}

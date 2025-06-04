@@ -1,0 +1,10 @@
+PUT http://localhost:3008/api/snails/6831be8e5c6302ec9f15282a
+Content-Type: application/json
+
+{
+  "name": "M Land",
+  "speed": 1.4,
+  "concentration": 12,
+  "character": "L",
+  "wins": 0
+}

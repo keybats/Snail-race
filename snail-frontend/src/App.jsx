@@ -1,191 +1,53 @@
 import { useState } from 'react'
-
+//import snailService from './services/snails.js'
+import racingService from './services/racingSnails.js'
+import winnerService from './services/winners.js'
 let winners = []
-let autoRacing = false
 
-const snails = [
-  {
-    name: 'Cornelious Cob',
-    speed: 4,
-    concentration: 1,
-    character: 'C'
-  },
-  {
-    name: 'Slimefoot',
-    speed: 2,
-    concentration: 6,
-    character: '#'
-  },
-  {
-    name: 'Sasha',
-    speed: 3,
-    concentration: 3,
-    character: '>'
-  }
-]
-
-//let isRaceOver = false
-
-// const chars = {
-//   empty: '.',
-//   start: '=',
-//   end: ';',
-//   clear: '-'
-// }
-
-const CheckForWin = (snails) => {
-  const positions = snails.map(snail => snail.position)
-  if (Math.max(...positions) >= 25) {
-    let num = 0
-    positions.forEach(position => {
-      if (position === Math.max(...positions)) {
-        num++
-      }
+const Update = () => {
+  winnerService
+    .getWinners()
+    .then(winnerList => {
+      winners = winnerList
     })
-    if (num === 1) {
-      console.log('win')
-      return snails.filter(snail => snail.position === Math.max(...positions))
-    }
-    else {
-      console.log('draw')
-      return snails.filter(snail => snail.position === Math.max(...positions))
-    }
-  }
-  return []
-}
-
-const SnailMove = (snail) => {
-  let position
-
-  const chance = Math.random()
-  console.log(snail.stats.name, chance)
-  if (chance < 0.5 - 0.04 * snail.stats.concentration) {
-    position = snail.position
-  }
-  else if (chance < 0.75 - 0.04 * snail.stats.concentration) {
-    position = snail.position + snail.stats.speed / 2
-  }
-  else if (chance > 1 - 0.04 * snail.stats.concentration) {
-    position = snail.position + 2 * snail.stats.speed
-  }
-  else {
-    position = snail.position + snail.stats.speed
-  }
-
-  return (
-
-    {
-      track: UpdateTrack(position, snail.stats.character),
-      position: position,
-      stats: snail.stats
-    }
-
-  )
-}
-
-const Reset = (snails) => {
-  
-  winners = []
-  return snails.map(snail => {
-    return ({
-      track: UpdateTrack(0, snail.stats.character),
-      position: 0,
-      stats: snail.stats
-    })
-  })
-}
-
-const UpdateTrack = (snailPosition, char) => {
-  //autoRacing = false
-  let track = ['=']
-  for (let i = 0; i < 25; i++) {
-    if (i < Math.floor(snailPosition)) {
-      track = track.concat('-')
-    }
-    else if (i === Math.floor(snailPosition)) {
-      track = track.concat(char)
-    }
-    else {
-      track = track.concat('.')
-    }
-  }
-  return track.concat(';')
-}
-
-const OnTick = (snails) => {
-  const newSnails = snails.map(snail => SnailMove(snail))
-  winners = CheckForWin(newSnails)
-  return newSnails
-}
-
-// const AutoRace = (startSnails) => {
-//   let currentSnails = startSnails 
-//   setInterval(currentSnails = OnTick(currentSnails))
-// }
-
-// const OnRaceEnd = (snails) => {
-//   save snails
-//   +1 to wins and draws
-// }
+  return racingService
+    .getAll()
+    .then(snails => snails)
+} 
 
 const App = () => {
 
-  const [snailsInRace, setSnailsInRace] = useState(snails.map(snail => {
-    return (
-      {
-        track: [],
-        position: 0,
-        stats: snail
-      }
-    )
-  }))
+  const [snailsInRace, setSnailsInRace] = useState(0)
   
-  //console.log(winners.length)
+  console.log(snailsInRace)
+
 
   let result = 'race in progress...'
-  let testVar = 'something is wrong'
+  let track = 'something is wrong'
 
-
-
-  if (snailsInRace[0]) {
-    testVar = snailsInRace.map(snail => { return snail.track.join(' ') }).join('\r\n')
+  
+  console.log(snailsInRace.length)
+  if (snailsInRace.length) {
+    console.log(snailsInRace)
+    track = snailsInRace.map(snail => { return snail.track.join(' ') }).join('\r\n')
   }
   if (winners.length === 1) {
-    //console.log(winners[0].stats.name)
-    result = `${winners[0].stats.name} wins!`
-    autoRacing = false
+    
+    result = `${winners[0].stats.name} wins! \n they have won ${winners[0].stats.wins + 1} times.`
+    //snailService.update(winners[0].stats.id, { ...winners[0].stats, wins: winners[0].stats.wins + 1 })
+    winners = []
   }
   else if (winners.length > 1) {
-    console.log(winners[0].name)
-    result = `it is a draw between these snails: ${winners.map(winner => {winner.stats.name}).join(', ')}`
-    autoRacing = false
-  }
-
-  if (autoRacing) {
-    setTimeout(setSnailsInRace, 2000, OnTick(snailsInRace))
+    console.log(winners.map(winner => {winner.stats.name}).join(' and '))
+    result = `it is a draw between these snails: ${winners.map(winner => {winner.stats.name}).join(' and ')}`
   }
 
   return (
     <div>
-      <pre>{testVar}</pre>
-
+      <pre>{track}</pre>
       <p>{result}</p>
 
-      <button onClick={() => { 
-        setSnailsInRace(Reset(snailsInRace))
-        autoRacing = false
-      }}>
-        reset
-      </button>
-      <button onClick={() => setSnailsInRace(OnTick(snailsInRace))}>
-        update
-      </button>
-      <button onClick={() => {
-        autoRacing = !autoRacing
-        setSnailsInRace(Reset(snailsInRace))
-      }}>
-        start auto race
-      </button>
+      <button onClick={() => {Update().then(snails => setSnailsInRace(snails))}}>Update</button>
     </div>
   )
 }

@@ -4,13 +4,16 @@
   "description": "backend for snail race",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "node --watch index.js" 
   },
   "author": "Keybats",
   "license": "MIT",
   "dependencies": {
     "dotenv": "^16.5.0",
-    "mongodb": "^6.16.0"
+    "express": "^5.1.0",
+    "mongodb": "^6.16.0",
+    "mongoose": "^8.15.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.27.0",
