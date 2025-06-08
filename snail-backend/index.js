@@ -7,6 +7,16 @@ const snail = require('./models/snail')
 app.use(express.json())
 
 let isRaceInProgress = false
+//let endMinutes
+let intervalID
+const delayInMinutes = 1
+
+app.get('/api/state', async (request, response) => {
+  const state = {
+    ongoing: isRaceInProgress
+  }
+  response.json(state)
+})
 
 app.post('/api/tick/:password', async (request, response) => {
   if (request.params.password === process.env.PASSWORD) {
@@ -131,6 +141,10 @@ const CheckForWin = async (snails) => {
       }
     })
     isRaceInProgress = false
+    clearInterval(intervalID)
+    const d = new Date()
+    endMinutes = d.getMinutes()
+    setTimeout(StartRace, 1000 * 60 * delayInMinutes)
     if (num === 1) {
       console.log('win')
       const winner = snails.filter(snail => snail.position === Math.max(...positions))
@@ -151,29 +165,35 @@ const CheckForWin = async (snails) => {
 
 const SnailMove = (snail) => {
   let position
-
+  let message = 'Huh? Something went wrong'
+  const name = snail.stats.name
   const chance = Math.random()
   //console.log(snail.stats.name, chance)
   if (chance < 0.5 - 0.04 * snail.stats.concentration) {
     position = snail.position
+    message = `${name} retreated into their shell!` 
   }
   else if (chance < 0.75 - 0.04 * snail.stats.concentration) {
     position = snail.position + snail.stats.speed / 2
+    message = `${name} is distracted.`
   }
   else if (chance > 1 - 0.04 * snail.stats.concentration) {
     position = snail.position + 2 * snail.stats.speed
+    message = `${name} is determined!`
   }
   else {
     position = snail.position + snail.stats.speed
+    message = `${name} continues on.`
   }
 
-  console.log(snail.stats.name, position)
+  console.log(message, position)
 
   return (
 
     {
       track: UpdateTrack(position, snail.stats.character),
       position: position,
+      message: message,
       stats: snail.stats
     }
 
@@ -213,14 +233,18 @@ const StartRace = async () => {
       {
         track: [],
         position: 0,
+        message: 'getting ready',
         stats: snail
       }
     )
   })
   isRaceInProgress = true
+  intervalID = setInterval(OnTick, 1000 * 2)
 }
 
-const PORT = process.env.PORT || 3006
+
+
+const PORT = process.env.PORT || 3008
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
 })
