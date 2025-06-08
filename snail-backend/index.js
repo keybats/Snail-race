@@ -5,6 +5,7 @@ const Snail = require('./models/snail')
 const snail = require('./models/snail')
 
 app.use(express.json())
+app.use(express.static('dist'))
 
 let isRaceInProgress = false
 //let endMinutes
