@@ -19,19 +19,15 @@ app.get('/api/state', async (request, response) => {
   response.json(state)
 })
 
-app.post('/api/tick/:password', async (request, response) => {
-  if (request.params.password === process.env.PASSWORD) {
-    if (isRaceInProgress) {
-      OnTick()
-    }
-    else {
-      StartRace()
-    }
-    response.status(200).end()
+app.post('/api/tick/', async (request, response) => {
+  
+  if (isRaceInProgress) {
+    OnTick()
   }
   else {
-    response.status(404).end()
+    StartRace()
   }
+  response.status(200).end()
 })
 
 app.get('/api/snails', async (request, response) => {
