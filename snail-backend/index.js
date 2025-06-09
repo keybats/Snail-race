@@ -7,6 +7,8 @@ const snail = require('./models/snail')
 app.use(express.json())
 app.use(express.static('dist'))
 
+let haveRacesStarted = false
+
 let isRaceInProgress = false
 //let endMinutes
 let intervalID
@@ -21,11 +23,9 @@ app.get('/api/state', async (request, response) => {
 
 app.post('/api/tick/', async (request, response) => {
   
-  if (isRaceInProgress) {
-    OnTick()
-  }
-  else {
+  if (!haveRacesStarted) {
     StartRace()
+    haveRacesStarted = true
   }
   response.status(200).end()
 })
