@@ -1,18 +1,56 @@
 const express = require('express')
 const app = express()
 require('dotenv').config()
+const mongoose = require('mongoose')
+
+
 const Snail = require('./models/snail')
-const snail = require('./models/snail')
+const Account = require('./models/account')
 
 app.use(express.json())
 app.use(express.static('dist'))
 
 let haveRacesStarted = false
-
 let isRaceInProgress = false
 //let endMinutes
 let intervalID
 const delayInMinutes = 1
+mongoose.set('strictQuery', false)
+
+app.get('/api/accounts', async (request, response) => {
+  const accountList = await Account.find({})
+  response.json(accountList)
+})
+
+app.post('/api/accounts',  async (request, response) => {
+  console.log(request.body)
+  const SameNameAccount = await Account.findOne({name: request.body.name})
+  if(SameNameAccount) {
+    try {
+      console.log(SameNameAccount, 'exists')
+      const savedNote = await SameNameAccount.save()
+      return response.json(savedNote)  
+    } 
+    catch (error) {
+      console.log(error.message)
+    }
+  }
+  else {
+    console.log('here')
+    const newAccount = new Account({
+      name: request.body.name,
+      tokens: 5
+    })
+    try {
+      const savedNote = await newAccount.save()
+      return response.json(savedNote)  
+    } 
+    catch (error) {
+      console.log(error.message)
+    }
+  }
+})
+
 
 app.get('/api/state', async (request, response) => {
   const state = {
@@ -79,7 +117,7 @@ app.put('/api/snails/:id', async (request, response) => {
   
   console.log(newSnail)
   //const snail = await Snail.findById(request.params.id)
-  if (!snail) {
+  if (!Snail) {
     return response.status(404).end()
   }
   console.log('here')
@@ -183,7 +221,7 @@ const SnailMove = (snail) => {
     message = `${name} continues on.`
   }
 
-  console.log(message, position)
+  //console.log(message, position)
 
   return (
 
@@ -238,8 +276,16 @@ const StartRace = async () => {
   isRaceInProgress = true
   intervalID = setInterval(OnTick, 1000 * 2)
 }
+const url = process.env.MONGODB_URI_SNAILS
 
-
+console.log('connecting')
+mongoose.connect(url)
+  .then(() => {
+    console.log('connected to MongoDB')
+  })
+  .catch(error => {
+    console.log('error connecting to MongoDB:', error.message)
+  })
 
 const PORT = process.env.PORT || 3008
 app.listen(PORT, () => {

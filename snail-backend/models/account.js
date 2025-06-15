@@ -1,19 +1,11 @@
 const mongoose = require('mongoose')
 
-
-//console.log(url)
-
-
-
-const snailSchema = mongoose.Schema({
+const accountSchema = mongoose.Schema({
   name: String,
-  speed: Number,
-  concentration: Number,
-  character: String,
-  wins: Number
+  tokens: Number
 })
 
-snailSchema.set('toJSON', {
+accountSchema.set('toJSON', {
   transform: (document, returnedObject) => {
     returnedObject.id = returnedObject._id.toString()
     delete returnedObject._id
@@ -21,4 +13,5 @@ snailSchema.set('toJSON', {
   }
 })
 
-module.exports = mongoose.model('Snail', snailSchema)
+module.exports = mongoose.model('Account', accountSchema)
+
