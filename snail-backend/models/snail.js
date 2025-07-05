@@ -1,10 +1,5 @@
 const mongoose = require('mongoose')
 
-
-//console.log(url)
-
-
-
 const snailSchema = mongoose.Schema({
   name: String,
   speed: Number,
