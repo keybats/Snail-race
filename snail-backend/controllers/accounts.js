@@ -5,8 +5,11 @@ const logger = require('../utils/logger')
 
 
 accountsRouter.put('/', async (request, response) => {
-
-  const updatedAccount = await Account.findOneAndUpdate({name: request.body.name}, request.body, {new: true})
+  let newAccount = request.body
+  if(newAccount.tokens < 0) {
+    newAccount = {name: newAccount.name, tokens: 0}
+  } 
+  const updatedAccount = await Account.findOneAndUpdate({name: newAccount.name}, newAccount, {new: true})
   
   return response.json(updatedAccount)
 })

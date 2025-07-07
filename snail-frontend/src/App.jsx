@@ -15,6 +15,7 @@ let bettingTime = false
 let timer = 0
 let firstWinFrame = true
 
+
 const ResetBets = (bets) => {
   return bets.map(bet => {return {snailName: bet.snailName, betCount: 0}})
 }
@@ -63,22 +64,16 @@ const Login = async (name, currentUser) => {
 
 }
 
-const Update = () => {
+const Update = async () => {
   console.log('ticking')
-  winnerService
-    .getWinners()
-    .then(winnerList => {
-      winners = winnerList
-    })
-  return racingService
-    .getAll()
-    .then(snails => {
-      if (snails.length === 0) {
-        console.log('yo')
-        tickService.contactBackend()
-      }
-      return snails
-    })
+  winners = await winnerService.getWinners()
+  const snails = await racingService.getAll()
+  if (snails.length === 0) {
+    console.log('yo')
+    tickService.contactBackend()
+  }
+  return snails
+    
 } 
 
 const App = () => {
@@ -118,29 +113,32 @@ const App = () => {
     track = snailsInRace.map(snail => { return `${snail.track.join(' ')} ${snail.message}` }).join('\r\n')
     if (!intervalling) {
       intervalling = true
-      setInterval(() => { Update().then(snails => setSnailsInRace(snails)) }, 1000 * 2)
+      
+      setInterval(async () => { const newSnails = await Update()
+        setSnailsInRace(newSnails) }, 1000 * 2)
     }
       
 
   }
   if (winners.length === 1) {
     if (firstWinFrame && loggedIn && bets !== 0) {
-
+      gainedTokens = 0
       bets.map(bet => {
         if (bet.snailName === winners[0].stats.name) {
           gainedTokens += bet.betCount * 2
-          bettingResults = `you gained ${gainedTokens - owedTokens} tokens`
+          
         }
       })
-      if (bettingResults === '') {
-        bettingResults = `you lost ${owedTokens} tokens`
-      }
-      UserServices.update({name: user.name, tokens: user.tokens + gainedTokens})
+      
+      const newUser = {name: user.name, tokens: user.tokens + gainedTokens}
+      gainedTokens -= owedTokens
+      UserServices.update(newUser)
+      setUser(newUser)
       setBets(ResetBets(bets))
       owedTokens = 0
       firstWinFrame = false
     }
-    
+    bettingResults = `you gained ${gainedTokens} tokens`
     result = `${winners[0].stats.name} wins! \n they have won ${winners[0].stats.wins + 1} times.`
     timer++
   }
@@ -151,9 +149,10 @@ const App = () => {
   }
   else {
     if (timer !== 0 ) {
-      UserServices.update({name: user.name, tokens: user.tokens - owedTokens}).then(newUser => {
-        setUser({name: newUser.name, tokens: newUser.tokens})
-      })
+      const newUser = {name: user.name, tokens: user.tokens - owedTokens}
+      UserServices.update(newUser)
+      setUser({name: newUser.name, tokens: newUser.tokens})
+      
     }
     bettingTime = false
     timer = 0
@@ -173,7 +172,7 @@ const App = () => {
       <p>{result}</p>
       <p>{bettingResults}</p>
 
-      <button onClick={() => {Update().then(snails => setSnailsInRace(snails))}}>Start</button>
+      <button onClick={async ()=> {setSnailsInRace( await Update())}}>Start</button>
       <br/>
       <br/>
       Username <input value={UsernameInput} onChange={handleUsernameInputChange}></input>
