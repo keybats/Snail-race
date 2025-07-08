@@ -2,7 +2,8 @@ import { useState } from 'react'
 import racingService from './services/racingSnails.js'
 import winnerService from './services/winners.js'
 import tickService from './services/tick.js'
-import UserServices from './services/login.js'
+import userServices from './services/login.js'
+import stateServices from './services/state.js'
 
 
 let winners = []
@@ -14,6 +15,7 @@ let keyCounter = 0
 let bettingTime = false
 let timer = 0
 let firstWinFrame = true
+let nextRaceTime = 0
 
 const CreateTrack = (snail) => {
   let newTrack = ['=']
@@ -73,7 +75,7 @@ const Login = async (name, currentUser) => {
   console.log(loggedIn)
   if (!loggedIn) {
     loggedIn = true
-    const user = await UserServices.login(name)
+    const user = await userServices.login(name)
     console.log(user)
     return user 
   }
@@ -81,6 +83,15 @@ const Login = async (name, currentUser) => {
     return currentUser
   }
 
+}
+
+const Timer = ({time, ongoing}) => {
+  if (!ongoing) {
+    return <p>about {time/1000} seconds until next race</p>
+  }
+  else {
+    return <p></p>
+  }
 }
 
 const Update = async () => {
@@ -91,13 +102,13 @@ const Update = async () => {
     console.log('yo')
     tickService.contactBackend()
   }
+  const state = await stateServices.getState()
+  nextRaceTime = state.RaceTimer
   return snails
-    
+  
 } 
 
 const App = () => {
-
-
 
   const [snailsInRace, setSnailsInRace] = useState(0)
   const [UsernameInput, setUsernameInput] = useState('')
@@ -151,7 +162,7 @@ const App = () => {
       
       const newUser = {name: user.name, tokens: user.tokens + gainedTokens}
       gainedTokens -= owedTokens
-      UserServices.update(newUser)
+      userServices.update(newUser)
       setUser(newUser)
       setBets(ResetBets(bets))
       owedTokens = 0
@@ -172,7 +183,7 @@ const App = () => {
   else {
     if (timer !== 0 ) {
       const newUser = {name: user.name, tokens: user.tokens - owedTokens}
-      UserServices.update(newUser)
+      userServices.update(newUser)
       setUser({name: newUser.name, tokens: newUser.tokens})
       
     }
@@ -180,6 +191,7 @@ const App = () => {
     timer = 0
     firstWinFrame = true
     betsVisual = 'Bets locked in'
+
   }
   if (timer  === 1) {
     bettingTime = true
@@ -192,6 +204,7 @@ const App = () => {
       <br/>
       <pre>{track}</pre>
       <p>{result}</p>
+      <Timer time={nextRaceTime} ongoing={!bettingTime} />
       <p>{bettingResults}</p>
 
       <button onClick={async ()=> {setSnailsInRace( await Update())}}>Start</button>
@@ -204,6 +217,7 @@ const App = () => {
       <br/>
       <p>Betting</p>
       <pre>{betsVisual}</pre>
+      
     </div>
   )
 }

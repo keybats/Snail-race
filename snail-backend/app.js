@@ -14,6 +14,10 @@ const delayInMinutes = 1
 let haveRacesStarted = false
 let racingSnails = []
 let winners = []
+let previousTime = Date.now()
+let timeDifference = 0
+let timer = 60 * 1000 * delayInMinutes
+let timerID
 
 console.log('connecting')
 mongoose.connect(config.MONGODB_URI)
@@ -75,12 +79,14 @@ app.put('/api/racing-snails/:id', async (request, response) => {
   })
 })
 
-// app.get('/api/state', async (request, response) => {
-//   const state = {
-//     ongoing: isRaceInProgress
-//   }
-//   response.json(state)
-// })
+ app.get('/api/state', async (request, response) => {
+  const state = {
+    ongoing: isRaceInProgress,
+    deltaTime: timeDifference,
+    RaceTimer: timer
+  }
+  response.json(state)
+})
 
 const CheckForWin = async (snails) => {
   const positions = snails.map(snail => snail.position)
@@ -96,6 +102,8 @@ const CheckForWin = async (snails) => {
     const d = new Date()
     endMinutes = d.getMinutes()
     setTimeout(StartRace, 1000 * 60 * delayInMinutes)
+    setInterval(BetweenRaces, 1000 * 2)
+    timer = 1000 * 60 * delayInMinutes
     if (num === 1) {
       logger.info('win')
       const winner = snails.filter(snail => snail.position === Math.max(...positions))
@@ -146,15 +154,21 @@ const SnailMove = (snail) => {
   )
 }
 
-
+const BetweenRaces = () => {
+  timeDifference = Date.now() - previousTime
+  previousTime = Date.now()
+  timer -= timeDifference
+}
 
 const OnTick = async () => {
   logger.info('ticking')
   racingSnails = racingSnails.map(snail => SnailMove(snail))
   winners = await CheckForWin(racingSnails)
+
 }
 
 const StartRace = async () => {
+  clearInterval(timerID)
   const allSnails = await Snail.find({})
   racingSnails = allSnails.map(snail => {
     return (
@@ -167,6 +181,7 @@ const StartRace = async () => {
   })
   isRaceInProgress = true
   intervalID = setInterval(OnTick, 1000 * 2)
+  
 }
 
 module.exports = app
