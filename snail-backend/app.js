@@ -138,7 +138,6 @@ const SnailMove = (snail) => {
   return (
 
     {
-      track: UpdateTrack(position, snail.stats.character),
       position: position,
       message: message,
       stats: snail.stats
@@ -148,23 +147,6 @@ const SnailMove = (snail) => {
 }
 
 
-
-
-const UpdateTrack = (snailPosition, char) => {
-  let track = ['=']
-  for (let i = 0; i < 25; i++) {
-    if (i < Math.floor(snailPosition)) {
-      track = track.concat('-')
-    }
-    else if (i === Math.floor(snailPosition)) {
-      track = track.concat(char)
-    }
-    else {
-      track = track.concat('.')
-    }
-  }
-  return track.concat(';')
-}
 
 const OnTick = async () => {
   logger.info('ticking')
@@ -177,7 +159,6 @@ const StartRace = async () => {
   racingSnails = allSnails.map(snail => {
     return (
       {
-        track: [],
         position: 0,
         message: 'getting ready',
         stats: snail

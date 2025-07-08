@@ -15,6 +15,25 @@ let bettingTime = false
 let timer = 0
 let firstWinFrame = true
 
+const CreateTrack = (snail) => {
+  let newTrack = ['=']
+  let limit = 25
+  if (Math.floor(snail.position) + 1> 25) {
+    limit = Math.floor(snail.position) + 1
+  }
+  for (let i = 0; i < limit; i++) {
+    if (i < Math.floor(snail.position)) {
+      newTrack = newTrack.concat('-')
+    }
+    else if (i === Math.floor(snail.position)) {
+      newTrack = newTrack.concat(snail.stats.character)
+    }
+    else {
+      newTrack = newTrack.concat('.')
+    }
+  }
+  return newTrack.concat(';')
+}
 
 const ResetBets = (bets) => {
   return bets.map(bet => {return {snailName: bet.snailName, betCount: 0}})
@@ -110,7 +129,7 @@ const App = () => {
     else if (bettingTime && loggedIn) {
       betsVisual = BetCase(bets, setBets, user.tokens)
     }
-    track = snailsInRace.map(snail => { return `${snail.track.join(' ')} ${snail.message}` }).join('\r\n')
+    track = snailsInRace.map(snail => { return `${CreateTrack(snail).join(' ')} ${snail.message}` }).join('\r\n')
     if (!intervalling) {
       intervalling = true
       
@@ -143,8 +162,11 @@ const App = () => {
     timer++
   }
   else if (winners.length > 1) {
-    console.log(winners.map(winner => {winner.stats.name}).join(' and '))
-    result = `it is a draw between these snails: ${winners.map(winner => {winner.stats.name}).join(' and ')}`
+    let winnerNames = []
+    winners.forEach(winner => {
+      winnerNames = winnerNames.concat(winner.stats.name)
+    })
+    result = `it is a draw between these snails: ${winnerNames.join(' and ')}`
     timer++
   }
   else {
