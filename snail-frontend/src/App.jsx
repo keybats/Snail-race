@@ -17,6 +17,40 @@ let timer = 0
 let firstWinFrame = true
 let nextRaceTime = 0
 
+const Race = ({track, result}) => {
+  return <div>
+      <pre>{track}</pre>
+      <p>{result}</p>
+  </div>
+}
+
+const Betting = ({results, visuals}) => {
+  return <div>
+    <h3>Betting</h3>
+    <p>{results}</p>
+    <pre>{visuals}</pre>
+  </div>
+}
+
+const Timer = ({time, ongoing}) => {
+  if (!ongoing) {
+    return <p>about {Math.round(time/1000)} seconds until next race</p>
+  }
+  else {
+    return <p></p>
+  }
+}
+
+const User = ({tokens, name, login, input, inputHandler}) => {
+  return <div>
+      <p>{name}</p>
+      <p>tokens: {tokens}</p>
+      <button onClick={login}>Log in</button>
+      <br/>
+      Username <input value={input} onChange={inputHandler}></input>
+  </div>
+}
+
 const CreateTrack = (snail) => {
   let newTrack = ['=']
   let limit = 25
@@ -85,14 +119,7 @@ const Login = async (name, currentUser) => {
 
 }
 
-const Timer = ({time, ongoing}) => {
-  if (!ongoing) {
-    return <p>about {time/1000} seconds until next race</p>
-  }
-  else {
-    return <p></p>
-  }
-}
+
 
 const Update = async () => {
   console.log('ticking')
@@ -103,7 +130,7 @@ const Update = async () => {
     tickService.contactBackend()
   }
   const state = await stateServices.getState()
-  nextRaceTime = state.RaceTimer
+  nextRaceTime = state.RaceTimer 
   return snails
   
 } 
@@ -199,25 +226,13 @@ const App = () => {
 
   return (
     <div>
-      <p>{user.name}</p>
-      <p>tokens: {user.tokens}</p>
-      <br/>
-      <pre>{track}</pre>
-      <p>{result}</p>
+      <Race track={track} result={result}/>
       <Timer time={nextRaceTime} ongoing={!bettingTime} />
-      <p>{bettingResults}</p>
-
       <button onClick={async ()=> {setSnailsInRace( await Update())}}>Start</button>
       <br/>
       <br/>
-      Username <input value={UsernameInput} onChange={handleUsernameInputChange}></input>
-      <br/>
-      <button onClick={async () => setUser( await Login(UsernameInput, user))}>Log in</button>
-      <br/>
-      <br/>
-      <p>Betting</p>
-      <pre>{betsVisual}</pre>
-      
+      <User name={user.name} tokens={user.tokens} login={async () => setUser( await Login(UsernameInput, user))} input={UsernameInput} inputHandler={handleUsernameInputChange}/>
+      <Betting results={bettingResults} visuals={betsVisual}/>
     </div>
   )
 }
