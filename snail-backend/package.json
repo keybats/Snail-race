@@ -8,7 +8,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "node --watch index.js",
     "build:ui": "rm -rf dist && cd ../snail-frontend && npm run build && cp -r dist ../snail-backend",
-    "deploy:full": "npm run build:ui && cd ../ && git add . && git commit -m uibuild && git push"
+    "deploy:full": "npm run build:ui && cd ../ && git add . && git commit && git push"
   },
   "author": "Keybats",
   "license": "MIT",

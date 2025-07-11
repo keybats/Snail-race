@@ -152,9 +152,18 @@ const App = () => {
 
   let result = 'race in progress...'
   let bettingResults = ''
-  let track = 'press "start" to begin'
-  let betsVisual= 'log in to bet'
-  
+  let track = 'loading...'
+  let betsVisual = 'log in to bet'
+
+  if (!intervalling) {
+    intervalling = true
+
+    setInterval(async () => {
+      const newSnails = await Update()
+      setSnailsInRace(newSnails)
+    }, 1000 * 2)
+  }
+
   if (snailsInRace.length) {
 
     if (bets === 0) {
@@ -168,12 +177,7 @@ const App = () => {
       betsVisual = BetCase(bets, setBets, user.tokens)
     }
     track = snailsInRace.map(snail => { return `${CreateTrack(snail).join(' ')} ${snail.message}` }).join('\r\n')
-    if (!intervalling) {
-      intervalling = true
-      
-      setInterval(async () => { const newSnails = await Update()
-        setSnailsInRace(newSnails) }, 1000 * 2)
-    }
+
       
 
   }
@@ -228,8 +232,6 @@ const App = () => {
     <div>
       <Race track={track} result={result}/>
       <Timer time={nextRaceTime} ongoing={!bettingTime} />
-      <button onClick={async ()=> {setSnailsInRace( await Update())}}>Start</button>
-      <br/>
       <br/>
       <User name={user.name} tokens={user.tokens} login={async () => setUser( await Login(UsernameInput, user))} input={UsernameInput} inputHandler={handleUsernameInputChange}/>
       <Betting results={bettingResults} visuals={betsVisual}/>

@@ -36,15 +36,6 @@ app.use(express.static('dist'))
 app.use('/api/accounts', accountsRouter)
 app.use('/api/snails', snailsRouter)
 
-app.post('/api/tick/', async (request, response) => {
-  
-  if (!haveRacesStarted) {
-    StartRace()
-    haveRacesStarted = true
-  }
-  response.status(200).end()
-})
-
 app.get('/api/racing-snails', async (request, response) => {
     if (racingSnails) {
     response.json(racingSnails)
@@ -104,6 +95,7 @@ const CheckForWin = async (snails) => {
     setTimeout(StartRace, 1000 * 60 * delayInMinutes)
     setInterval(BetweenRaces, 1000 * 2)
     timer = 1000 * 60 * delayInMinutes
+    previousTime = Date.now()
     if (num === 1) {
       logger.info('win')
       const winner = snails.filter(snail => snail.position === Math.max(...positions))
@@ -155,6 +147,7 @@ const SnailMove = (snail) => {
 }
 
 const BetweenRaces = () => {
+  console.log(timer)
   timeDifference = Date.now() - previousTime
   previousTime = Date.now()
   timer -= timeDifference
@@ -182,6 +175,11 @@ const StartRace = async () => {
   isRaceInProgress = true
   intervalID = setInterval(OnTick, 1000 * 2)
   
+}
+
+if (!haveRacesStarted) {
+  StartRace()
+  haveRacesStarted = true
 }
 
 module.exports = app
