@@ -2,8 +2,9 @@ POST http://localhost:3008/api/snails
 Content-Type: application/json
 
 {
-  "name": "TestWinner",
-  "speed": 25,
-  "concentration": 13,
+  "name": "Orvar the Steadfast",
+  "speed": 4,
+  "concentration": 5,
+  "adrenalin": -4,
   "character": "W"
 }

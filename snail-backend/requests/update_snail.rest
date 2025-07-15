@@ -3,8 +3,9 @@ Content-Type: application/json
 
 {
   "name": "M Land",
-  "speed": 1.4,
+  "speed": 1.5,
   "concentration": 12,
+  "adrenalin": 4,
   "character": "L",
   "wins": 0
 }

@@ -11,11 +11,11 @@ let intervalling = false
 let loggedIn = false
 let owedTokens = 0
 let gainedTokens = 0
-let keyCounter = 0
 let bettingTime = false
-let timer = 0
 let firstWinFrame = true
+let firstRaceFrame = true
 let nextRaceTime = 0
+let raceLength = 25
 
 const Race = ({track, result}) => {
   return <div>
@@ -28,7 +28,7 @@ const Betting = ({results, visuals}) => {
   return <div>
     <h3>Betting</h3>
     <p>{results}</p>
-    <pre>{visuals}</pre>
+    {visuals}
   </div>
 }
 
@@ -53,8 +53,8 @@ const User = ({tokens, name, login, input, inputHandler}) => {
 
 const CreateTrack = (snail) => {
   let newTrack = ['=']
-  let limit = 25
-  if (Math.floor(snail.position) + 1> 25) {
+  let limit = raceLength
+  if (Math.floor(snail.position) + 1> limit) {
     limit = Math.floor(snail.position) + 1
   }
   for (let i = 0; i < limit; i++) {
@@ -72,18 +72,22 @@ const CreateTrack = (snail) => {
 }
 
 const ResetBets = (bets) => {
-  return bets.map(bet => {return {snailName: bet.snailName, betCount: 0}})
+  return bets.map(bet => {return {snailName: bet.snailName, snailID: bet.snailID, betCount: 0}})
 }
 
 const BetCase = (bets, button, userTokens) => {
-  const htmlStats = bets.map(bet => {
-    keyCounter++
-    return <div key={ keyCounter }>
-      <p>{ bet.snailName } { bet.betCount }</p>
-      <button onClick={ () => button(ChangeBets(1, bet, bets, userTokens)) }>add</button>
-      <button onClick={ () => button(ChangeBets(-1, bet, bets, userTokens)) }>remove</button>
-    </div>
-  })
+  const htmlStats =
+    <ul>
+      {
+        bets.map(bet => {
+          return <li key={bet.snailID}>
+            <p>{bet.snailName} {bet.betCount}</p>
+            <button onClick={() => button(ChangeBets(1, bet, bets, userTokens))}>add</button>
+            <button onClick={() => button(ChangeBets(-1, bet, bets, userTokens))}>remove</button>
+          </li>
+        })
+      }
+    </ul>
   return htmlStats
 }
 
@@ -93,7 +97,7 @@ const ChangeBets = (increase, snail, bets, userTokens) => {
     owedTokens += increase
     const newBets = bets.map(bet => {
       if (bet.snailName === snail.snailName) {
-        return { snailName: bet.snailName, betCount: bet.betCount + increase }
+        return { snailName: bet.snailName, snailID: bet.snailID, betCount: bet.betCount + increase }
       }
       else { return bet }
     })
@@ -126,11 +130,11 @@ const Update = async () => {
   winners = await winnerService.getWinners()
   const snails = await racingService.getAll()
   if (snails.length === 0) {
-    console.log('yo')
     tickService.contactBackend()
   }
   const state = await stateServices.getState()
   nextRaceTime = state.RaceTimer 
+  raceLength = state.RaceLength
   return snails
   
 } 
@@ -158,17 +162,14 @@ const App = () => {
   if (!intervalling) {
     intervalling = true
 
-    setInterval(async () => {
-      const newSnails = await Update()
-      setSnailsInRace(newSnails)
-    }, 1000 * 2)
+    setInterval(async () => { setSnailsInRace(await Update()) }, 1000 * 2)
   }
 
   if (snailsInRace.length) {
 
     if (bets === 0) {
       setBets(snailsInRace.map(snail => {
-        const newBets = { snailName: snail.stats.name, betCount: 0}
+        const newBets = { snailName: snail.stats.name, snailID: snail.stats.id, betCount: 0}
         console.log(newBets)
         return newBets
       }))
@@ -176,7 +177,8 @@ const App = () => {
     else if (bettingTime && loggedIn) {
       betsVisual = BetCase(bets, setBets, user.tokens)
     }
-    track = snailsInRace.map(snail => { return `${CreateTrack(snail).join(' ')} ${snail.message}` }).join('\r\n')
+
+    track = snailsInRace.map( snail => { return `${ CreateTrack(snail).join(' ')} ${snail.message}` }).join('\r\n')
 
       
 
@@ -197,11 +199,11 @@ const App = () => {
       setUser(newUser)
       setBets(ResetBets(bets))
       owedTokens = 0
+      bettingTime = true
       firstWinFrame = false
     }
     bettingResults = `you gained ${gainedTokens} tokens`
     result = `${winners[0].stats.name} wins! \n they have won ${winners[0].stats.wins + 1} times.`
-    timer++
   }
   else if (winners.length > 1) {
     let winnerNames = []
@@ -209,23 +211,19 @@ const App = () => {
       winnerNames = winnerNames.concat(winner.stats.name)
     })
     result = `it is a draw between these snails: ${winnerNames.join(' and ')}`
-    timer++
   }
   else {
-    if (timer !== 0 ) {
+    if (firstRaceFrame) {
       const newUser = {name: user.name, tokens: user.tokens - owedTokens}
       userServices.update(newUser)
       setUser({name: newUser.name, tokens: newUser.tokens})
       
     }
     bettingTime = false
-    timer = 0
+    firstRaceFrame = false
     firstWinFrame = true
     betsVisual = 'Bets locked in'
 
-  }
-  if (timer  === 1) {
-    bettingTime = true
   }
 
   return (

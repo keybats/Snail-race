@@ -8,9 +8,10 @@ const Snail = require('./models/snail.js')
 
 const app = express()
 
+const delayInMinutes = 1
+
 let isRaceInProgress = false
 let intervalID
-const delayInMinutes = 1
 let haveRacesStarted = false
 let racingSnails = []
 let winners = []
@@ -18,6 +19,7 @@ let previousTime = Date.now()
 let timeDifference = 0
 let timer = 60 * 1000 * delayInMinutes
 let timerID
+let raceLenght = 50
 
 console.log('connecting')
 mongoose.connect(config.MONGODB_URI)
@@ -68,20 +70,22 @@ app.put('/api/racing-snails/:id', async (request, response) => {
       return snail
     }
   })
+  response.json(updatedSnails)
 })
 
  app.get('/api/state', async (request, response) => {
   const state = {
     ongoing: isRaceInProgress,
     deltaTime: timeDifference,
-    RaceTimer: timer
+    RaceTimer: timer,
+    RaceLength: raceLenght
   }
   response.json(state)
 })
 
 const CheckForWin = async (snails) => {
   const positions = snails.map(snail => snail.position)
-  if (Math.max(...positions) >= 25) {
+  if (Math.max(...positions) >= raceLenght) {
     let num = 0
     positions.forEach(position => {
       if (position === Math.max(...positions)) {
@@ -114,6 +118,8 @@ const CheckForWin = async (snails) => {
 }
 
 const SnailMove = (snail) => {
+  const rawSpeed = snail.stats.speed
+  let actualSpeed = rawSpeed * (snail.position * snail.stats.adrenalin / 300 + 1) 
   let position
   let message = 'Huh? Something went wrong'
   const name = snail.stats.name
@@ -123,15 +129,15 @@ const SnailMove = (snail) => {
     message = `${name} retreated into their shell!` 
   }
   else if (chance < 0.75 - 0.04 * snail.stats.concentration) {
-    position = snail.position + snail.stats.speed / 2
+    position = snail.position + actualSpeed / 2
     message = `${name} is distracted.`
   }
   else if (chance > 1 - 0.04 * snail.stats.concentration) {
-    position = snail.position + 2 * snail.stats.speed
+    position = snail.position + 2 * actualSpeed
     message = `${name} is determined!`
   }
   else {
-    position = snail.position + snail.stats.speed
+    position = snail.position + actualSpeed
     message = `${name} continues on.`
   }
 
@@ -147,7 +153,6 @@ const SnailMove = (snail) => {
 }
 
 const BetweenRaces = () => {
-  console.log(timer)
   timeDifference = Date.now() - previousTime
   previousTime = Date.now()
   timer -= timeDifference

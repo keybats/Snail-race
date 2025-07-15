@@ -14,6 +14,7 @@ snailsRouter.put('/:id', async (request, response) => {
     name: request.body.name,
     speed: request.body.speed,
     concentration: request.body.concentration,
+    adrenalin: request.body.adrenalin,
     character: request.body.character,
     wins: request.body.wins
   }
@@ -33,6 +34,7 @@ snailsRouter.post('/', async (request, response) => {
     name: request.body.name,
     speed: request.body.speed,
     concentration: request.body.concentration,
+    adrenalin: request.body.adrenalin,
     character: request.body.character,
     wins: 0
   })
