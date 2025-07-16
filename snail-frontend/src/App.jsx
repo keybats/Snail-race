@@ -16,6 +16,7 @@ let firstWinFrame = true
 let firstRaceFrame = true
 let nextRaceTime = 0
 let raceLength = 25
+let weather = 'clear'
 
 const Race = ({track, result}) => {
   return <div>
@@ -32,8 +33,8 @@ const Betting = ({results, visuals}) => {
   </div>
 }
 
-const Timer = ({time, ongoing}) => {
-  if (!ongoing) {
+const Timer = ({time, showTimer}) => {
+  if (showTimer) {
     return <p>about {Math.round(time/1000)} seconds until next race</p>
   }
   else {
@@ -58,11 +59,14 @@ const CreateTrack = (snail) => {
     limit = Math.floor(snail.position) + 1
   }
   for (let i = 0; i < limit; i++) {
-    if (i < Math.floor(snail.position)) {
+    if ((i < Math.floor(snail.position) && i > Math.floor(snail.previousPosition)) || (i > Math.floor(snail.position) && i < Math.floor(snail.previousPosition)) || i < Math.floor(snail.position) && i < Math.floor(snail.previousPosition)) {
       newTrack = newTrack.concat('-')
     }
     else if (i === Math.floor(snail.position)) {
       newTrack = newTrack.concat(snail.stats.character)
+    }
+    else if (i === Math.floor(snail.previousPosition)) {
+      newTrack = newTrack.concat('_')
     }
     else {
       newTrack = newTrack.concat('.')
@@ -135,6 +139,7 @@ const Update = async () => {
   const state = await stateServices.getState()
   nextRaceTime = state.RaceTimer 
   raceLength = state.RaceLength
+  weather = state.weather
   return snails
   
 } 
@@ -199,13 +204,14 @@ const App = () => {
       setUser(newUser)
       setBets(ResetBets(bets))
       owedTokens = 0
-      bettingTime = true
       firstWinFrame = false
     }
+    bettingTime = true
     bettingResults = `you gained ${gainedTokens} tokens`
     result = `${winners[0].stats.name} wins! \n they have won ${winners[0].stats.wins + 1} times.`
   }
   else if (winners.length > 1) {
+    bettingTime = true
     let winnerNames = []
     winners.forEach(winner => {
       winnerNames = winnerNames.concat(winner.stats.name)
@@ -228,8 +234,9 @@ const App = () => {
 
   return (
     <div>
+      <p>Weather report: {weather}</p>
       <Race track={track} result={result}/>
-      <Timer time={nextRaceTime} ongoing={!bettingTime} />
+      <Timer time={nextRaceTime} showTimer={bettingTime} />
       <br/>
       <User name={user.name} tokens={user.tokens} login={async () => setUser( await Login(UsernameInput, user))} input={UsernameInput} inputHandler={handleUsernameInputChange}/>
       <Betting results={bettingResults} visuals={betsVisual}/>

@@ -20,6 +20,8 @@ let timeDifference = 0
 let timer = 60 * 1000 * delayInMinutes
 let timerID
 let raceLenght = 50
+let weather = "clear"
+const weatherList = ["clear", "hurricane", "peanuts"]
 
 console.log('connecting')
 mongoose.connect(config.MONGODB_URI)
@@ -78,7 +80,8 @@ app.put('/api/racing-snails/:id', async (request, response) => {
     ongoing: isRaceInProgress,
     deltaTime: timeDifference,
     RaceTimer: timer,
-    RaceLength: raceLenght
+    RaceLength: raceLenght,
+    weather: weather
   }
   response.json(state)
 })
@@ -122,9 +125,37 @@ const SnailMove = (snail) => {
   let actualSpeed = rawSpeed * (snail.position * snail.stats.adrenalin / 300 + 1) 
   let position
   let message = 'Huh? Something went wrong'
+  let alteredStats = snail.stats
   const name = snail.stats.name
   const chance = Math.random()
-  if (chance < 0.5 - 0.04 * snail.stats.concentration) {
+  if(weather === "hurricane" && chance < 0.1) {
+    position = snail.position + Math.floor((Math.random() - 0.5) * 22)
+    console.log('position', position)
+    if (snail.position < position) {
+      message = `${name} was picked up by the winds and blown forward`
+      if (position > raceLenght - 1) {
+        position = raceLenght - 1
+      }
+    }
+    else if (snail.position > position) {
+      message = `${name} was picked up by the winds and blown back`
+    }
+    else {
+      message = `the wind is to strong for ${name} to move`
+    }
+  }
+  else if (weather === "peanuts" && chance < 0.1) {
+    if (Math.random < snail.allergy) {
+      message `a peanut fell on ${name} and caused an allergic reaction`
+      position = snail.position
+
+    }
+    else {
+      message = `${name} ate a fallen peanut and enjoyed it`
+      position = snail.position
+    }
+  }  
+  else if (chance < 0.5 - 0.04 * snail.stats.concentration) {
     position = snail.position
     message = `${name} retreated into their shell!` 
   }
@@ -141,12 +172,17 @@ const SnailMove = (snail) => {
     message = `${name} continues on.`
   }
 
+  if (position < 0) {
+    position = 0
+  }
+
   return (
 
     {
+      previousPosition: snail.position, //before the snails position is updated.
       position: position,
       message: message,
-      stats: snail.stats
+      stats: alteredStats
     }
 
   )
@@ -162,15 +198,16 @@ const OnTick = async () => {
   logger.info('ticking')
   racingSnails = racingSnails.map(snail => SnailMove(snail))
   winners = await CheckForWin(racingSnails)
-
 }
 
 const StartRace = async () => {
   clearInterval(timerID)
+  weather = weatherList[Math.floor(Math.random() * weatherList.length)]
   const allSnails = await Snail.find({})
   racingSnails = allSnails.map(snail => {
     return (
       {
+        previousPosition: 0,
         position: 0,
         message: 'getting ready',
         stats: snail
