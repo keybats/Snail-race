@@ -2,28 +2,19 @@ const snailsRouter = require('express').Router()
 const Snail = require('../models/snail')
 const logger = require('../utils/logger.js')
 
+const UpdateSnail = async (newSnail, id) => {
+  
+  return savedSnail = await Snail.findByIdAndUpdate(id, newSnail, { new: true })
+  
+}
+
 snailsRouter.delete('/api/snails/:id', async (request, response) => {
   await Snail.findByIdAndDelete(request.params.id)
   response.status(204).end()
 })
 
 snailsRouter.put('/:id', async (request, response) => {
-  const id = request.params.id
-  const newSnail = 
-  {
-    name: request.body.name,
-    speed: request.body.speed,
-    concentration: request.body.concentration,
-    adrenalin: request.body.adrenalin,
-    character: request.body.character,
-    wins: request.body.wins
-  }
-  
-  logger.info(newSnail)
-  if (!Snail) {
-    return response.status(404).end()
-  }
-  savedSnail = await Snail.findByIdAndUpdate(id, newSnail, { new: true })
+  const savedSnail = await UpdateSnail(request.body, request.params.id)
   response.json(savedSnail)
 })
 
@@ -32,11 +23,9 @@ snailsRouter.post('/', async (request, response) => {
 
   const newSnail = await new Snail({
     name: request.body.name,
-    speed: request.body.speed,
-    concentration: request.body.concentration,
-    adrenalin: request.body.adrenalin,
     character: request.body.character,
-    wins: 0
+    wins: 0,
+    stats: request.body.stats
   })
 
   try {
@@ -63,4 +52,7 @@ snailsRouter.get('/:id', async (request, response) => {
   }
 })
 
-module.exports = snailsRouter
+
+
+
+module.exports = { router: snailsRouter, updateFunction: UpdateSnail}

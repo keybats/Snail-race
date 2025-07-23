@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import racingService from './services/racingSnails.js'
 import winnerService from './services/winners.js'
-import tickService from './services/tick.js'
 import userServices from './services/login.js'
 import stateServices from './services/state.js'
 
@@ -63,7 +62,7 @@ const CreateTrack = (snail) => {
       newTrack = newTrack.concat('-')
     }
     else if (i === Math.floor(snail.position)) {
-      newTrack = newTrack.concat(snail.stats.character)
+      newTrack = newTrack.concat(snail.info.character)
     }
     else if (i === Math.floor(snail.previousPosition)) {
       newTrack = newTrack.concat('_')
@@ -133,9 +132,6 @@ const Update = async () => {
   console.log('ticking')
   winners = await winnerService.getWinners()
   const snails = await racingService.getAll()
-  if (snails.length === 0) {
-    tickService.contactBackend()
-  }
   const state = await stateServices.getState()
   nextRaceTime = state.RaceTimer 
   raceLength = state.RaceLength
@@ -167,14 +163,14 @@ const App = () => {
   if (!intervalling) {
     intervalling = true
 
-    setInterval(async () => { setSnailsInRace(await Update()) }, 1000 * 2)
+    setInterval(async () => { setSnailsInRace(await Update()) }, 1000 * 3)
   }
 
   if (snailsInRace.length) {
 
     if (bets === 0) {
       setBets(snailsInRace.map(snail => {
-        const newBets = { snailName: snail.stats.name, snailID: snail.stats.id, betCount: 0}
+        const newBets = { snailName: snail.info.name, snailID: snail.info.id, betCount: 0}
         console.log(newBets)
         return newBets
       }))
@@ -192,7 +188,7 @@ const App = () => {
     if (firstWinFrame && loggedIn && bets !== 0) {
       gainedTokens = 0
       bets.map(bet => {
-        if (bet.snailName === winners[0].stats.name) {
+        if (bet.snailName === winners[0].info.name) {
           gainedTokens += bet.betCount * 2
           
         }
@@ -208,13 +204,13 @@ const App = () => {
     }
     bettingTime = true
     bettingResults = `you gained ${gainedTokens} tokens`
-    result = `${winners[0].stats.name} wins! \n they have won ${winners[0].stats.wins + 1} times.`
+    result = `${winners[0].info.name} wins! \n they have won ${winners[0].info.wins + 1} times.`
   }
   else if (winners.length > 1) {
     bettingTime = true
     let winnerNames = []
     winners.forEach(winner => {
-      winnerNames = winnerNames.concat(winner.stats.name)
+      winnerNames = winnerNames.concat(winner.info.name)
     })
     result = `it is a draw between these snails: ${winnerNames.join(' and ')}`
   }

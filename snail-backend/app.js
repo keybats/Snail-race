@@ -38,7 +38,7 @@ app.use(express.json())
 app.use(express.static('dist'))
 
 app.use('/api/accounts', accountsRouter)
-app.use('/api/snails', snailsRouter)
+app.use('/api/snails', snailsRouter.router)
 
 app.get('/api/racing-snails', async (request, response) => {
     if (racingSnails) {
@@ -66,7 +66,7 @@ app.post('/api/racing-snails', async (request, response) => {
 app.put('/api/racing-snails/:id', async (request, response) => {
   const updatedSnails = racingSnails.map(snail => {
     if (snail.id === request.params.id) {
-      return { ...request.body, id: request.body.stats.id }
+      return { ...request.body, id: request.body.info.id }
     }
     else {
       return snail
@@ -106,9 +106,9 @@ const CheckForWin = async (snails) => {
     if (num === 1) {
       logger.info('win')
       const winner = snails.filter(snail => snail.position === Math.max(...positions))
-      const winnerStats = winner[0].stats
+      const winnerStats = winner[0].info
       const updatedWinner = { ...winnerStats._doc, wins: (winnerStats.wins + 1)}
-      await Snail.findByIdAndUpdate(winner[0].stats.id, updatedWinner, { new: true })
+      await Snail.findByIdAndUpdate(winner[0].info.id, updatedWinner, { new: true })
       logger.info(updatedWinner)
       return winner
     }
@@ -121,16 +121,15 @@ const CheckForWin = async (snails) => {
 }
 
 const SnailMove = (snail) => {
-  const rawSpeed = snail.stats.speed
-  let actualSpeed = rawSpeed * (snail.position * snail.stats.adrenalin / 300 + 1) 
+  const rawSpeed = snail.info.stats.speed
+  let actualSpeed = rawSpeed * (snail.position * snail.info.stats.adrenalin / 300 + 1) 
   let position
   let message = 'Huh? Something went wrong'
-  let alteredStats = snail.stats
-  const name = snail.stats.name
+  let alteredStats = snail.info
+  const name = snail.info.name
   const chance = Math.random()
   if(weather === "hurricane" && chance < 0.1) {
     position = snail.position + Math.floor((Math.random() - 0.5) * 22)
-    console.log('position', position)
     if (snail.position < position) {
       message = `${name} was picked up by the winds and blown forward`
       if (position > raceLenght - 1) {
@@ -145,25 +144,45 @@ const SnailMove = (snail) => {
     }
   }
   else if (weather === "peanuts" && chance < 0.1) {
-    if (Math.random < snail.allergy) {
-      message `a peanut fell on ${name} and caused an allergic reaction`
+    const statTypes = Object.keys(snail.info.stats)
+    const chosenType = statTypes[Math.floor(Math.random() * statTypes.length)]
+    console.log('chosen type: ', chosenType)
+
+    if (Math.random() > 0.5 /*snail.allergy*/ ) {
+      message = `a peanut fell on ${name} and caused an allergic reaction`
       position = snail.position
+      const previousValue = alteredStats.stats[chosenType]
+      const modification = previousValue < 0 
+        ? 1.1
+        : 0.9
+
+      alteredStats.stats[chosenType] *= modification
+
+      message += `. Their ${chosenType} stat was dercreased by ${previousValue - alteredStats.stats[chosenType]}`
 
     }
     else {
       message = `${name} ate a fallen peanut and enjoyed it`
       position = snail.position
+      const previousValue = alteredStats.stats[chosenType]
+      const modification = alteredStats.stats[chosenType] < 0
+        ? 0.9
+        : 1.1
+
+      alteredStats.stats[chosenType] *= modification
+
+      message += `. Their ${chosenType} stat was increased by ${alteredStats.stats[chosenType] - previousValue}`
     }
   }  
-  else if (chance < 0.5 - 0.04 * snail.stats.concentration) {
+  else if (chance < 0.5 - 0.04 * snail.info.stats.concentration) {
     position = snail.position
     message = `${name} retreated into their shell!` 
   }
-  else if (chance < 0.75 - 0.04 * snail.stats.concentration) {
+  else if (chance < 0.75 - 0.04 * snail.info.stats.concentration) {
     position = snail.position + actualSpeed / 2
     message = `${name} is distracted.`
   }
-  else if (chance > 1 - 0.04 * snail.stats.concentration) {
+  else if (chance > 1 - 0.04 * snail.info.stats.concentration) {
     position = snail.position + 2 * actualSpeed
     message = `${name} is determined!`
   }
@@ -176,13 +195,15 @@ const SnailMove = (snail) => {
     position = 0
   }
 
+  snailsRouter.updateFunction(alteredStats, alteredStats.id)
+
   return (
 
     {
       previousPosition: snail.position, //before the snails position is updated.
       position: position,
       message: message,
-      stats: alteredStats
+      info: alteredStats
     }
 
   )
@@ -210,12 +231,12 @@ const StartRace = async () => {
         previousPosition: 0,
         position: 0,
         message: 'getting ready',
-        stats: snail
+        info: snail
       }
     )
   })
   isRaceInProgress = true
-  intervalID = setInterval(OnTick, 1000 * 2)
+  intervalID = setInterval(OnTick, 1000 * 3)
   
 }
 

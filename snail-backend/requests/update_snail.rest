@@ -1,11 +1,13 @@
-PUT http://localhost:3008/api/snails/6831be8e5c6302ec9f15282a
+PUT http://localhost:3008/api/snails/6876967ba92c52f9f6426a72
 Content-Type: application/json
 
 {
-  "name": "M Land",
-  "speed": 1.5,
-  "concentration": 12,
-  "adrenalin": 4,
-  "character": "L",
-  "wins": 0
+  "name": "Orvar the Steadfast",
+  "character": "O",
+  "wins": 0,
+  "stats": {
+    "speed": 4,
+    "concentration": 5,
+    "adrenalin": -4
+  }
 }

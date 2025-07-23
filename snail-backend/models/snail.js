@@ -2,11 +2,14 @@ const mongoose = require('mongoose')
 
 const snailSchema = mongoose.Schema({
   name: String,
-  speed: Number,
-  concentration: Number,
-  adrenalin: Number,
   character: String,
-  wins: Number
+  wins: Number,
+  stats: {
+    speed: Number,
+    concentration: Number,
+    adrenalin: Number,
+  }
+
 })
 
 snailSchema.set('toJSON', {
