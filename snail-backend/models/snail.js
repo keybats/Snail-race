@@ -8,6 +8,9 @@ const snailSchema = mongoose.Schema({
     speed: Number,
     concentration: Number,
     adrenalin: Number,
+    confidence: Number,
+    competitiveness: Number,
+    perseverance: Number
   }
 
 })

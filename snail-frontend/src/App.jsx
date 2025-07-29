@@ -163,7 +163,7 @@ const App = () => {
   if (!intervalling) {
     intervalling = true
 
-    setInterval(async () => { setSnailsInRace(await Update()) }, 1000 * 3)
+    setInterval(async () => { setSnailsInRace(await Update()) }, 1000 * 1)
   }
 
   if (snailsInRace.length) {
@@ -236,6 +236,7 @@ const App = () => {
       <br/>
       <User name={user.name} tokens={user.tokens} login={async () => setUser( await Login(UsernameInput, user))} input={UsernameInput} inputHandler={handleUsernameInputChange}/>
       <Betting results={bettingResults} visuals={betsVisual}/>
+      <a href='https://snail-race.onrender.com/api/snails'>view snail stats</a>
     </div>
   )
 }
