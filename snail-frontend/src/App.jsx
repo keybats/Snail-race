@@ -236,9 +236,10 @@ const App = () => {
       <br/>
       <User name={user.name} tokens={user.tokens} login={async () => setUser( await Login(UsernameInput, user))} input={UsernameInput} inputHandler={handleUsernameInputChange}/>
       <Betting results={bettingResults} visuals={betsVisual}/>
-      <a href='https://snail-race.onrender.com/api/snails'>view snail stats</a>
     </div>
   )
 }
 
 export default App
+
+//<a href='https://snail-race.onrender.com/api/snails'>view snail stats</a>
