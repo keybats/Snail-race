@@ -120,6 +120,7 @@ const CheckForWin = async (snails) => {
       return snails.filter(snail => snail.position === Math.max(...positions))
     }
   }
+  CalculateOdds(snails)
   return []
 }
 
@@ -266,6 +267,19 @@ const StartRace = async () => {
   isRaceInProgress = true
   intervalID = setInterval(OnTick, 1000 * 5)
   
+}
+
+// 0.4 / odds = payoff per bet if payoff is less than 1.1 it becomes 1.1 ?
+
+const CalculateOdds = (snails) => {
+  const allWins = snails.reduce(((totalWins, snail) => totalWins + snail.info.wins), 0)
+  const winArray = snails.map(snail => {
+    return {
+        winrate: snail.info.wins / allWins,
+        snailName: snail.info.name
+      }
+  })
+  logger.info(winArray)
 }
 
 if (!haveRacesStarted) {
